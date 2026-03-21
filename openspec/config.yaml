@@ -1,0 +1,8 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Vue.js 3 (frontend), Python FastAPI (backend), OpenAI Whisper (local speech recognition)
+  Project: English pronunciation recognition and scoring system
+  Domain: Language learning / Education technology
+  Architecture: SPA frontend + REST API backend
+  Language: Chinese documentation, English code

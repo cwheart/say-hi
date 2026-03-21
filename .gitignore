@@ -1,0 +1,65 @@
+
+# ─── Python / Backend ───
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Whisper model cache
+*.pt
+
+# Uploaded audio temp files
+backend/uploads/
+backend/tmp/
+
+# ─── Node.js / Frontend ───
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ─── IDE & Editors ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Database ───
+*.sqlite3
+*.db
+
+# ─── Alembic ───
+# (keep migration scripts, ignore stamps)
+
+# ─── Logs ───
+*.log
+logs/
+
+# ─── OS ───
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ─── Testing ───
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
