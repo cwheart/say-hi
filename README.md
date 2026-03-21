@@ -1,18 +1,18 @@
 # Say Hi - English Pronunciation Scoring System
 
-An English pronunciation recognition and scoring system powered by OpenAI Whisper. Record your pronunciation, get instant feedback with multi-dimension scoring and word-level comparison.
+An English pronunciation recognition and scoring system powered by OpenAI Whisper. Users practice pronunciation via a WeChat Mini Program, while administrators manage content through a dedicated admin dashboard.
 
 ## Features
 
-- 🎤 Browser-based audio recording
+- 🎤 WeChat Mini Program + H5 web app (uni-app cross-platform)
 - 🧠 Local speech recognition powered by OpenAI Whisper
 - 📊 Multi-dimension scoring: Accuracy, Completeness, Fluency
 - 🔤 Word-by-word comparison with color-coded feedback
 - 📚 Built-in practice library with words, phrases, and sentences
-- 📱 Responsive design for desktop and mobile
-- 🔐 User authentication (email + password, JWT)
+- � WeChat login (Mini Program) + Email/Password login (Admin)
 - 🗄️ PostgreSQL database for persistent data storage
-- 📈 Practice history tracking with best score display
+- 📈 Practice history tracking
+- 🛠️ Admin dashboard: user management, practice CRUD, history overview
 
 ## Prerequisites
 
@@ -73,10 +73,10 @@ python scripts/seed_db.py
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend
+### Admin Dashboard
 
 ```bash
-cd frontend
+cd admin
 
 # Install dependencies
 npm install
@@ -85,30 +85,58 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173` and will proxy API requests to the backend at `http://localhost:8000`.
+Admin dashboard at `http://localhost:5173`, proxying API to `http://localhost:8000`.
+
+### User App (uni-app: WeChat Mini Program + H5)
+
+```bash
+cd uniapp
+
+# Install dependencies
+npm install
+
+# H5 development server
+npm run dev:h5
+
+# WeChat Mini Program development build
+npm run dev:mp-weixin
+# Then open 微信开发者工具, import dist/dev/mp-weixin/
+```
+
+H5 at `http://localhost:5174`, WeChat Mini Program via 微信开发者工具.
+See `uniapp/README.md` for full details.
 
 ## Project Structure
 
 ```
 say-hi/
-├── frontend/              # Vue.js 3 + Vite + TypeScript
+├── admin/                 # Vue.js 3 Admin Dashboard
 │   ├── src/
-│   │   ├── components/    # Vue components
-│   │   ├── composables/   # Composition API utilities (auth, API, recorder)
-│   │   ├── views/         # Page views (Login, Register, History, etc.)
-│   │   ├── router/        # Vue Router with auth guards
+│   │   ├── components/    # AdminLayout
+│   │   ├── composables/   # useAuth, useApi
+│   │   ├── views/         # Dashboard, Users, Practices, History, Login
+│   │   ├── router/        # Vue Router with admin auth guards
 │   │   └── types/         # TypeScript type definitions
+│   └── package.json
+├── uniapp/                # uni-app (Vue 3 + Vite + TS) → MP-WEIXIN + H5
+│   ├── src/
+│   │   ├── pages/         # index, practice, result, history, profile, login
+│   │   ├── components/    # score-card, word-compare
+│   │   ├── utils/         # request, upload, auth, recorder, storage
+│   │   ├── types/         # TypeScript type definitions
+│   │   ├── pages.json     # Page routes & tab bar config
+│   │   └── manifest.json  # Platform-specific settings
 │   └── package.json
 ├── backend/               # Python FastAPI
 │   ├── app/
 │   │   ├── main.py        # FastAPI entry point
-│   │   ├── routers/       # API route handlers (auth, evaluate, history, practices)
-│   │   ├── services/      # Business logic (Whisper, scoring, auth)
+│   │   ├── routers/       # auth, evaluate, practices, history, wx_*, admin_*
+│   │   ├── services/      # Whisper, scoring, auth, wx_service
 │   │   ├── models/        # SQLAlchemy ORM models & Pydantic schemas
 │   │   ├── data/          # Practice seed data (JSON)
 │   │   └── database.py    # Async SQLAlchemy engine & session
 │   ├── alembic/           # Database migrations
-│   ├── scripts/           # Utility scripts (seed_db.py)
+│   ├── scripts/           # seed_db.py (practices + admin user)
 │   └── requirements.txt
 └── README.md
 ```
@@ -117,15 +145,24 @@ say-hi/
 
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
-| `/api/health` | GET | No | Health check with model loading status |
-| `/api/auth/register` | POST | No | Register a new user |
-| `/api/auth/login` | POST | No | Login and receive JWT token |
-| `/api/auth/me` | GET | Yes | Get current user info |
-| `/api/evaluate` | POST | Yes | Upload audio + target text, get scoring result |
-| `/api/practices` | GET | Yes | List practice items (filterable by category/difficulty) |
-| `/api/practices/{id}` | GET | Yes | Get single practice item details |
-| `/api/history` | GET | Yes | Paginated list of evaluation history |
-| `/api/history/{id}` | GET | Yes | Get details of a specific evaluation |
+| `/api/health` | GET | No | Health check |
+| **Auth** | | | |
+| `/api/auth/register` | POST | No | Register user (email + password) |
+| `/api/auth/login` | POST | No | Login (email + password) |
+| `/api/auth/me` | GET | JWT | Get current user info |
+| **WeChat** | | | |
+| `/api/wx/login` | POST | No | WeChat mini program login (code → JWT) |
+| `/api/wx/practices` | GET | JWT | List practices |
+| `/api/wx/evaluate` | POST | JWT | Upload audio + evaluate |
+| `/api/wx/history` | GET | JWT | User's evaluation history |
+| **Admin** | | | |
+| `/api/admin/auth/login` | POST | No | Admin login (role check) |
+| `/api/admin/users` | GET | Admin | List all users |
+| `/api/admin/users/{id}/disable` | PATCH | Admin | Disable user |
+| `/api/admin/users/{id}/enable` | PATCH | Admin | Enable user |
+| `/api/admin/practices` | GET/POST | Admin | List / Create practices |
+| `/api/admin/practices/{id}` | PUT/DELETE | Admin | Update / Delete practice |
+| `/api/admin/history` | GET | Admin | All users' evaluation history |
 
 ## Configuration
 
@@ -140,11 +177,12 @@ See `backend/.env.example` for available configuration options:
 
 ## Tech Stack
 
-- **Frontend**: Vue.js 3, Vite, TypeScript, Vue Router, Axios
-- **Backend**: FastAPI, OpenAI Whisper, python-Levenshtein
+- **Admin Dashboard**: Vue.js 3, Vite, TypeScript, Vue Router, Axios
+- **User App**: uni-app (Vue 3 + Vite + TypeScript) → WeChat Mini Program + H5
+- **Backend**: FastAPI, OpenAI Whisper, python-Levenshtein, httpx
 - **Database**: PostgreSQL, SQLAlchemy 2.0 (async), Alembic
-- **Auth**: JWT (python-jose), passlib + bcrypt
-- **Audio**: MediaRecorder API (browser), ffmpeg (server-side conversion)
+- **Auth**: JWT (python-jose), passlib + bcrypt, WeChat jscode2session
+- **Audio**: uni.getRecorderManager (mini program), Web MediaRecorder (H5), ffmpeg (server-side)
 
 ## License
 

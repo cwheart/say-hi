@@ -33,10 +33,13 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     await db.refresh(user)
 
     # Generate token
-    token = create_access_token(str(user.id))
+    token = create_access_token(str(user.id), role=user.role)
 
     return AuthResponse(
-        user=UserResponse(id=str(user.id), email=user.email, created_at=user.created_at),
+        user=UserResponse(
+            id=str(user.id), email=user.email, role=user.role,
+            nickname=user.nickname, is_active=user.is_active, created_at=user.created_at,
+        ),
         access_token=token,
     )
 
@@ -47,16 +50,25 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user or not user.password_hash or not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
-    token = create_access_token(str(user.id))
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled",
+        )
+
+    token = create_access_token(str(user.id), role=user.role)
 
     return AuthResponse(
-        user=UserResponse(id=str(user.id), email=user.email, created_at=user.created_at),
+        user=UserResponse(
+            id=str(user.id), email=user.email, role=user.role,
+            nickname=user.nickname, is_active=user.is_active, created_at=user.created_at,
+        ),
         access_token=token,
     )
 
@@ -67,5 +79,8 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return UserResponse(
         id=str(current_user.id),
         email=current_user.email,
+        role=current_user.role,
+        nickname=current_user.nickname,
+        is_active=current_user.is_active,
         created_at=current_user.created_at,
     )

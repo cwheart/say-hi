@@ -67,7 +67,10 @@ class LoginRequest(BaseModel):
 class UserResponse(BaseModel):
     """User info response."""
     id: str = Field(..., description="User UUID")
-    email: str = Field(..., description="User email")
+    email: Optional[str] = Field(None, description="User email")
+    role: str = Field(default="user", description="User role: admin or user")
+    nickname: Optional[str] = Field(None, description="User nickname")
+    is_active: bool = Field(default=True, description="Account active status")
     created_at: datetime = Field(..., description="Account creation time")
 
     model_config = {"from_attributes": True}
@@ -78,6 +81,54 @@ class AuthResponse(BaseModel):
     user: UserResponse
     access_token: str = Field(..., description="JWT access token")
     token_type: str = Field(default="bearer")
+
+
+# ─── Admin Schemas ───
+
+
+class AdminUserResponse(BaseModel):
+    """Admin view of a user."""
+    id: str
+    email: Optional[str] = None
+    role: str
+    openid: Optional[str] = None
+    nickname: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PracticeCreate(BaseModel):
+    """Request to create a new practice."""
+    text: str = Field(..., description="The target text")
+    category: str = Field(..., description="Category: word, phrase, or sentence")
+    difficulty: str = Field(..., description="Difficulty: beginner, intermediate, or advanced")
+    hint: Optional[str] = Field(None, description="Optional pronunciation hint")
+
+
+class PracticeUpdate(BaseModel):
+    """Request to update a practice."""
+    text: Optional[str] = None
+    category: Optional[str] = None
+    difficulty: Optional[str] = None
+    hint: Optional[str] = None
+
+
+# ─── WeChat Schemas ───
+
+
+class WxLoginRequest(BaseModel):
+    """WeChat mini program login request."""
+    code: str = Field(..., description="wx.login() code")
+
+
+class WxAuthResponse(BaseModel):
+    """WeChat auth response."""
+    user: UserResponse
+    access_token: str
+    token_type: str = "bearer"
 
 
 # ─── History Schemas ───
@@ -103,9 +154,14 @@ class HistoryDetail(HistoryItem):
     word_comparison: Optional[List[WordComparison]] = None
 
 
+class AdminHistoryItem(HistoryItem):
+    """History item with user email for admin view."""
+    user_email: Optional[str] = None
+
+
 class PaginatedResponse(BaseModel):
     """Generic paginated response."""
-    items: List[HistoryItem]
+    items: list
     total: int
     page: int
     page_size: int

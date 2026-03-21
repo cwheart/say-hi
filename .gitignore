@@ -29,8 +29,13 @@ backend/tmp/
 
 # ─── Node.js / Frontend ───
 node_modules/
-frontend/dist/
-frontend/.vite/
+admin/dist/
+admin/.vite/
+
+# ─── uni-app ───
+uniapp/dist/
+uniapp/node_modules/
+uniapp/.hbuilderx/
 
 # ─── IDE & Editors ───
 .vscode/

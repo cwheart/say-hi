@@ -29,7 +29,9 @@ app = FastAPI(
 )
 
 # CORS configuration
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+# Include all frontend origins: Admin (5173), H5 uni-app dev (5174), H5 production domain
+# Example: CORS_ORIGINS=http://localhost:5173,http://localhost:5174,https://sayhi.example.com
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:3000")
 origins = [origin.strip() for origin in cors_origins.split(",")]
 
 app.add_middleware(
@@ -41,12 +43,29 @@ app.add_middleware(
 )
 
 # Register routers
-from app.routers import auth, evaluate, history, practices  # noqa: E402
+from app.routers import (  # noqa: E402
+    auth, evaluate, history, practices,
+    wx, wx_practices, wx_evaluate, wx_history,
+    admin_auth, admin_users, admin_practices, admin_history,
+)
 
+# Existing routes
 app.include_router(auth.router, prefix="/api")
 app.include_router(evaluate.router, prefix="/api")
 app.include_router(practices.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
+
+# WeChat mini program routes
+app.include_router(wx.router, prefix="/api")
+app.include_router(wx_practices.router, prefix="/api")
+app.include_router(wx_evaluate.router, prefix="/api")
+app.include_router(wx_history.router, prefix="/api")
+
+# Admin routes
+app.include_router(admin_auth.router, prefix="/api")
+app.include_router(admin_users.router, prefix="/api")
+app.include_router(admin_practices.router, prefix="/api")
+app.include_router(admin_history.router, prefix="/api")
 
 
 @app.get("/api/health")

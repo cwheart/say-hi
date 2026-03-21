@@ -26,13 +26,13 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    user_id = decode_access_token(token)
-    if user_id is None:
+    token_data = decode_access_token(token)
+    if token_data is None:
         raise credentials_exception
 
     try:
-        user_uuid = uuid.UUID(user_id)
-    except ValueError:
+        user_uuid = uuid.UUID(token_data["user_id"])
+    except (ValueError, KeyError):
         raise credentials_exception
 
     result = await db.execute(select(User).where(User.id == user_uuid))
@@ -41,4 +41,24 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
 
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled",
+        )
+
     return user
+
+
+async def require_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    FastAPI dependency that ensures the current user has admin role.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user

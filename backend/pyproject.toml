@@ -1,0 +1,9 @@
+# Uvicorn development server with debug configuration
+[tool.uvicorn]
+app = "app.main:app"
+host = "0.0.0.0"
+port = 8000
+reload = true
+log_level = "debug"
+access_log = true
+debug = true

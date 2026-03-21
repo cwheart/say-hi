@@ -12,18 +12,23 @@ JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))  # 24 hours
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def _truncate_password(password: str) -> str:
+    """Truncate password to 72 bytes (bcrypt limit)."""
+    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+
+
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
-    return pwd_context.hash(password)
+    return pwd_context.hash(_truncate_password(password))
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_truncate_password(plain_password), hashed_password)
 
 
-def create_access_token(user_id: str, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token."""
+def create_access_token(user_id: str, role: str = "user", expires_delta: Optional[timedelta] = None) -> str:
+    """Create a JWT access token with user role."""
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -31,14 +36,15 @@ def create_access_token(user_id: str, expires_delta: Optional[timedelta] = None)
 
     payload = {
         "sub": str(user_id),
+        "role": role,
         "exp": expire,
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
-def decode_access_token(token: str) -> Optional[str]:
+def decode_access_token(token: str) -> Optional[dict]:
     """
-    Decode a JWT access token and return the user_id (sub claim).
+    Decode a JWT access token and return dict with user_id and role.
     Returns None if the token is invalid or expired.
     """
     try:
@@ -46,6 +52,6 @@ def decode_access_token(token: str) -> Optional[str]:
         user_id: str = payload.get("sub")
         if user_id is None:
             return None
-        return user_id
+        return {"user_id": user_id, "role": payload.get("role", "user")}
     except JWTError:
         return None
