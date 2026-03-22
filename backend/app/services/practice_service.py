@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.db_models import Practice
+from app.services import tts_service
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,14 @@ async def create_practice(db: AsyncSession, data) -> Practice:
     db.add(practice)
     await db.flush()
     await db.refresh(practice)
+
+    # Generate TTS audio asynchronously
+    audio_url = await tts_service.generate_audio(data.text, practice_id)
+    if audio_url:
+        practice.audio_url = audio_url
+        await db.flush()
+        await db.refresh(practice)
+
     return practice
 
 
@@ -85,6 +94,8 @@ async def update_practice(db: AsyncSession, practice_id: str, data) -> Optional[
     practice = await get_practice_by_id(db, practice_id)
     if not practice:
         return None
+
+    text_changed = data.text is not None and data.text != practice.text
 
     if data.text is not None:
         practice.text = data.text
@@ -97,14 +108,27 @@ async def update_practice(db: AsyncSession, practice_id: str, data) -> Optional[
 
     await db.flush()
     await db.refresh(practice)
+
+    # Regenerate TTS audio if text changed
+    if text_changed:
+        audio_url = await tts_service.generate_audio(practice.text, practice_id)
+        if audio_url:
+            practice.audio_url = audio_url
+            await db.flush()
+            await db.refresh(practice)
+
     return practice
 
 
 async def delete_practice(db: AsyncSession, practice_id: str) -> bool:
-    """Delete a practice item. Returns True if deleted."""
+    """Delete a practice item and its audio file. Returns True if deleted."""
     practice = await get_practice_by_id(db, practice_id)
     if not practice:
         return False
+
+    # Clean up audio file
+    tts_service.delete_audio(practice_id)
+
     await db.delete(practice)
     await db.flush()
     return True

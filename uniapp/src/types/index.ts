@@ -4,6 +4,7 @@ export interface Practice {
   category: 'word' | 'phrase' | 'sentence'
   difficulty: 'easy' | 'medium' | 'hard'
   hint?: string
+  audio_url?: string
   created_at?: string
   updated_at?: string
 }
@@ -22,21 +23,23 @@ export interface PaginatedResponse<T = any> {
 }
 
 export interface WordComparison {
-  word: string
+  target: string | null
+  recognized: string | null
   status: 'correct' | 'incorrect' | 'missing' | 'extra'
 }
 
-export interface EvaluationResult {
-  id?: string
-  target_text: string
-  recognized_text: string
+export interface Scores {
   accuracy: number
   completeness: number
   fluency: number
-  overall_score: number
+  overall: number
+}
+
+export interface EvaluationResult {
+  target_text: string
+  recognized_text: string
+  scores: Scores
   word_comparison: WordComparison[]
-  practice_id?: string
-  created_at?: string
 }
 
 export interface User {

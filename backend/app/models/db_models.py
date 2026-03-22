@@ -36,6 +36,7 @@ class Practice(Base):
     category = Column(String(50), nullable=False, index=True)
     difficulty = Column(String(50), nullable=False, index=True)
     hint = Column(Text, nullable=True)
+    audio_url = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True

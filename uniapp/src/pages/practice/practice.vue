@@ -14,7 +14,17 @@
           </view>
           <text class="category-tag">{{ practice.category }}</text>
         </view>
-        <text class="target-text">{{ practice.text }}</text>
+        <view class="target-text-row">
+          <text class="target-text">{{ practice.text }}</text>
+          <view
+            v-if="practice.audio_url"
+            class="speaker-btn"
+            :class="{ playing: audioPlaying }"
+            @tap="handlePlayAudio"
+          >
+            <text class="speaker-icon">🔊</text>
+          </view>
+        </view>
         <text v-if="practice.hint" class="hint-text">💡 {{ practice.hint }}</text>
         <text v-if="bestScore >= 0" class="best-score">🏆 最佳: {{ bestScore }}分</text>
       </view>
@@ -70,6 +80,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { get } from '@/utils/request'
 import { uploadFile } from '@/utils/upload'
 import { startRecording, stopRecording, isRecordingSupported } from '@/utils/recorder'
+import { playAudio, stopAudio, isAudioPlaying, destroyAudioPlayer } from '@/utils/audio-player'
 import type { RecordingResult } from '@/utils/recorder'
 import type { Practice, EvaluationResult } from '@/types'
 
@@ -79,6 +90,7 @@ const bestScore = ref(-1)
 const recordState = ref<'idle' | 'recording' | 'recorded'>('idle')
 const recordingTime = ref(0)
 const submitting = ref(false)
+const audioPlaying = ref(false)
 
 let recordResult: RecordingResult | null = null
 let timer: ReturnType<typeof setInterval> | null = null
@@ -186,8 +198,33 @@ onLoad(async (query) => {
   }
 })
 
+function handlePlayAudio() {
+  if (!practice.value?.audio_url) return
+
+  if (isAudioPlaying()) {
+    stopAudio()
+    audioPlaying.value = false
+    return
+  }
+
+  const url = practice.value.audio_url
+  playAudio(url, {
+    onPlay: () => {
+      audioPlaying.value = true
+    },
+    onStop: () => {
+      audioPlaying.value = false
+    },
+    onError: () => {
+      audioPlaying.value = false
+      uni.showToast({ title: '播放失败', icon: 'none' })
+    },
+  })
+}
+
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  destroyAudioPlayer()
 })
 </script>
 
@@ -217,13 +254,45 @@ onUnmounted(() => {
   border-radius: 6rpx;
 }
 
+.target-text-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
 .target-text {
   font-size: 40rpx;
   font-weight: 600;
   color: #1e293b;
-  display: block;
+  flex: 1;
   margin-bottom: 16rpx;
   line-height: 1.5;
+}
+
+.speaker-btn {
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background-color: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8rpx;
+}
+
+.speaker-btn.playing {
+  background-color: #3b82f6;
+  animation: speaker-pulse 0.8s ease-in-out infinite;
+}
+
+.speaker-icon {
+  font-size: 36rpx;
+}
+
+@keyframes speaker-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
 }
 
 .hint-text {

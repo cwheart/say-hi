@@ -24,6 +24,7 @@ export interface Practice {
   category: 'word' | 'phrase' | 'sentence'
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   hint: string | null
+  audio_url: string | null
 }
 
 export interface PracticeListResponse {

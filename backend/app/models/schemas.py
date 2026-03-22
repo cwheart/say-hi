@@ -41,6 +41,7 @@ class Practice(BaseModel):
     category: str = Field(..., description="Category: word, phrase, or sentence")
     difficulty: str = Field(..., description="Difficulty: beginner, intermediate, or advanced")
     hint: Optional[str] = Field(None, description="Optional pronunciation hint")
+    audio_url: Optional[str] = Field(None, description="URL of the TTS pronunciation audio")
 
 
 class PracticeListResponse(BaseModel):

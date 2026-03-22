@@ -4,14 +4,14 @@
       <!-- Overall Score -->
       <view class="overall-card card text-center">
         <text class="overall-label">综合评分</text>
-        <text class="overall-score" :style="{ color: overallColor }">{{ result.overall_score }}</text>
+        <text class="overall-score" :style="{ color: overallColor }">{{ result.scores.overall }}</text>
       </view>
 
       <!-- Detail Scores -->
       <view class="card">
-        <score-card label="准确度 Accuracy" :score="result.accuracy" />
-        <score-card label="完整度 Completeness" :score="result.completeness" />
-        <score-card label="流利度 Fluency" :score="result.fluency" />
+        <score-card label="准确度 Accuracy" :score="result.scores.accuracy" />
+        <score-card label="完整度 Completeness" :score="result.scores.completeness" />
+        <score-card label="流利度 Fluency" :score="result.scores.fluency" />
       </view>
 
       <!-- Word Comparison -->
@@ -51,7 +51,7 @@ const result = ref<EvaluationResult | null>(null)
 
 const overallColor = computed(() => {
   if (!result.value) return '#94a3b8'
-  const s = result.value.overall_score
+  const s = result.value.scores.overall
   if (s >= 80) return '#22c55e'
   if (s >= 60) return '#f59e0b'
   return '#ef4444'

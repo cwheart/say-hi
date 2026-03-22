@@ -20,7 +20,7 @@ The system SHALL define database tables using SQLAlchemy ORM with extended User 
 
 #### Scenario: Practices table
 - **WHEN** the database is initialized
-- **THEN** a `practices` table SHALL exist with columns: id (varchar, PK), text (not null), category (not null), difficulty (not null), hint (nullable), created_at (timestamp), updated_at (timestamp)
+- **THEN** a `practices` table SHALL exist with columns: id (varchar, PK), text (not null), category (not null), difficulty (not null), hint (nullable), audio_url (varchar(500), nullable), created_at (timestamp), updated_at (timestamp)
 
 #### Scenario: Evaluation history table
 - **WHEN** the database is initialized
@@ -47,6 +47,21 @@ The system SHALL provide an Alembic migration to add role, openid, nickname, and
 #### Scenario: Existing users default values
 - **WHEN** the migration runs on a database with existing users
 - **THEN** all existing users SHALL have role='user' and is_active=true
+
+### Requirement: Database migration for audio_url
+The system SHALL provide an Alembic migration to add the `audio_url` column to the practices table.
+
+#### Scenario: Migration upgrade
+- **WHEN** `alembic upgrade head` is executed
+- **THEN** the practices table SHALL have a new `audio_url` column (varchar(500), nullable, default null)
+
+#### Scenario: Migration downgrade
+- **WHEN** `alembic downgrade -1` is executed
+- **THEN** the `audio_url` column SHALL be removed from the practices table
+
+#### Scenario: Existing practices default value
+- **WHEN** the migration runs on a database with existing practices
+- **THEN** all existing practices SHALL have `audio_url` set to null
 
 ### Requirement: Seed data script
 The system SHALL provide a standalone script to initialize seed data from practices.json into the PostgreSQL practices table.

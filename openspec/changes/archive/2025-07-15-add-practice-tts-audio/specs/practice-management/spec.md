@@ -1,15 +1,4 @@
-## CHANGED Requirements
-
-### Requirement: Practice data source
-The practice data source SHALL be PostgreSQL database, accessible via both user-facing and admin APIs.
-
-#### Scenario: List practices from database (user)
-- **WHEN** a client sends GET to `/api/practices` or `/api/wx/practices`
-- **THEN** the system SHALL query the practices table in PostgreSQL
-
-#### Scenario: Get practice by ID from database
-- **WHEN** a client sends GET to `/api/practices/{id}` or `/api/wx/practices/{id}`
-- **THEN** the system SHALL query the practices table by primary key
+## MODIFIED Requirements
 
 ### Requirement: Admin practice CRUD operations
 The practice management service SHALL support create, update, and delete operations for admin users, with automatic TTS audio generation on create and text update.
@@ -30,10 +19,6 @@ The practice management service SHALL support create, update, and delete operati
 - **WHEN** the practice service receives a delete request with a practice ID
 - **THEN** it SHALL delete the record from the database and delete the associated audio file if it exists
 
-#### Scenario: Practice not found on update/delete
-- **WHEN** the practice service receives an update or delete request for a non-existent ID
-- **THEN** it SHALL raise an HTTP 404 error
-
 ### Requirement: Practice data model includes audio_url
 The Practice response SHALL include the `audio_url` field indicating the URL of the generated pronunciation audio.
 
@@ -44,10 +29,3 @@ The Practice response SHALL include the `audio_url` field indicating the URL of 
 #### Scenario: Practice response without audio
 - **WHEN** a client requests practice data and the practice has no generated audio
 - **THEN** the response SHALL include `audio_url` with a null value
-
-### Requirement: Practice updated_at tracking
-The practices table SHALL track when a practice was last updated.
-
-#### Scenario: Updated timestamp
-- **WHEN** a practice is created or updated
-- **THEN** the updated_at column SHALL be set to the current timestamp

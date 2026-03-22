@@ -5,7 +5,7 @@
       :key="index"
       class="word-item"
       :class="'word-' + item.status"
-    >{{ item.word }}</text>
+    >{{ item.status === 'extra' ? item.recognized : item.target }}</text>
   </view>
 </template>
 

@@ -35,7 +35,7 @@ async def list_practices(
     items = [
         PracticeSchema(
             id=p.id, text=p.text, category=p.category,
-            difficulty=p.difficulty, hint=p.hint,
+            difficulty=p.difficulty, hint=p.hint, audio_url=p.audio_url,
         )
         for p in practices
     ]
@@ -50,5 +50,5 @@ async def get_practice(practice_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Practice '{practice_id}' not found")
     return PracticeSchema(
         id=practice.id, text=practice.text, category=practice.category,
-        difficulty=practice.difficulty, hint=practice.hint,
+        difficulty=practice.difficulty, hint=practice.hint, audio_url=practice.audio_url,
     )

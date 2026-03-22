@@ -32,6 +32,9 @@ node_modules/
 admin/dist/
 admin/.vite/
 
+# ─── TTS Audio ───
+backend/audio/*.mp3
+
 # ─── uni-app ───
 uniapp/dist/
 uniapp/node_modules/

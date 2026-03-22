@@ -67,6 +67,30 @@ async def seed_practices(force: bool = False):
         await session.commit()
         print(f"✓ Inserted {len(data)} practice items into the database.")
 
+        # Generate TTS audio for all practices without audio_url
+        from app.services.tts_service import generate_audio
+
+        result = await session.execute(
+            select(Practice).where(Practice.audio_url.is_(None))
+        )
+        practices_without_audio = list(result.scalars().all())
+
+        if practices_without_audio:
+            print(f"🔊 Generating TTS audio for {len(practices_without_audio)} practices...")
+            for i, practice in enumerate(practices_without_audio):
+                audio_url = await generate_audio(practice.text, practice.id)
+                if audio_url:
+                    practice.audio_url = audio_url
+                    print(f"  [{i+1}/{len(practices_without_audio)}] ✓ {practice.id}")
+                else:
+                    print(f"  [{i+1}/{len(practices_without_audio)}] ✗ {practice.id} (failed)")
+                # Rate limiting delay
+                await asyncio.sleep(0.2)
+            await session.commit()
+            print(f"✓ TTS audio generation complete.")
+        else:
+            print("✓ All practices already have audio.")
+
     await engine.dispose()
 
 

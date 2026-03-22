@@ -1,45 +1,43 @@
 
-### Requirement: WeChat login endpoint
-The system SHALL provide a `/api/wx/login` endpoint that accepts a WeChat login code and returns a JWT token.
-
-#### Scenario: Successful WeChat login (existing user)
-- **WHEN** a POST request is sent to `/api/wx/login` with a valid WeChat code and the openid is already in the database
-- **THEN** the system SHALL return a JWT token and user info for the existing user
-
-#### Scenario: Successful WeChat login (new user)
-- **WHEN** a POST request is sent to `/api/wx/login` with a valid WeChat code and the openid is not in the database
-- **THEN** the system SHALL create a new user with the openid and role=user, and return a JWT token
-
-#### Scenario: Invalid WeChat code
-- **WHEN** a POST request is sent to `/api/wx/login` with an invalid or expired code
-- **THEN** the system SHALL return HTTP 401 with "WeChat login failed"
-
-#### Scenario: WeChat API failure
-- **WHEN** the backend cannot reach the WeChat API (https://api.weixin.qq.com/sns/jscode2session)
-- **THEN** the system SHALL return HTTP 502 with "WeChat service unavailable"
-
-### Requirement: WeChat API configuration
-The system SHALL read WX_APP_ID and WX_APP_SECRET from environment variables to call the WeChat jscode2session API.
-
-#### Scenario: Configuration present
-- **WHEN** the backend starts with WX_APP_ID and WX_APP_SECRET set
-- **THEN** the system SHALL be ready to process WeChat login requests
-
-#### Scenario: Configuration missing
-- **WHEN** a WeChat login request is received but WX_APP_ID or WX_APP_SECRET is not set
-- **THEN** the system SHALL return HTTP 500 with "WeChat login not configured"
-
 ### Requirement: Mini program silent login
-The mini program SHALL attempt silent login on app launch using stored token or wx.login().
+The application SHALL attempt platform-appropriate login on app launch: WeChat silent login via `uni.login()` on MP-WEIXIN, or check for stored JWT token on H5.
 
 #### Scenario: Token exists and valid
-- **WHEN** the mini program launches with a valid stored token
+- **WHEN** the application launches with a valid stored token
 - **THEN** the system SHALL use the stored token for API requests without re-login
 
-#### Scenario: Token expired or missing
-- **WHEN** the mini program launches without a valid token
-- **THEN** the system SHALL call wx.login() to get a code, send it to `/api/wx/login`, and store the returned token
+#### Scenario: Token expired or missing (MP-WEIXIN)
+- **WHEN** the application launches on MP-WEIXIN without a valid token
+- **THEN** the system SHALL call `uni.login()` to get a code, send it to `/api/wx/login`, and store the returned token via `uni.setStorageSync`
 
-#### Scenario: Auto re-login on 401
-- **WHEN** an API request returns HTTP 401
-- **THEN** the mini program SHALL automatically attempt wx.login() and retry the original request
+#### Scenario: Token expired or missing (H5)
+- **WHEN** the application launches on H5 without a valid token
+- **THEN** the system SHALL redirect the user to the login page
+
+#### Scenario: Auto re-login on 401 (MP-WEIXIN)
+- **WHEN** an API request returns HTTP 401 on MP-WEIXIN
+- **THEN** the system SHALL automatically attempt `uni.login()` and retry the original request
+
+#### Scenario: Auto redirect on 401 (H5)
+- **WHEN** an API request returns HTTP 401 on H5
+- **THEN** the system SHALL clear the stored token and redirect the user to the login page
+
+
+### Requirement: H5 email/password login
+The H5 platform SHALL provide an email/password login page that authenticates via the existing `/api/auth/login` endpoint.
+
+#### Scenario: H5 login page
+- **WHEN** an unauthenticated user accesses the H5 app
+- **THEN** the system SHALL display a login page with email and password input fields
+
+#### Scenario: H5 successful login
+- **WHEN** the user submits valid email and password on H5
+- **THEN** the system SHALL POST to `/api/auth/login`, store the JWT token in `localStorage`, and navigate to the index page
+
+#### Scenario: H5 login error
+- **WHEN** the user submits invalid credentials on H5
+- **THEN** the system SHALL display an error message without navigating away
+
+#### Scenario: H5 logout
+- **WHEN** the user taps logout on the H5 profile page
+- **THEN** the system SHALL clear the stored token from `localStorage` and redirect to the login page

@@ -1,9 +1,11 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import engine
 from app.services.whisper_service import whisper_service
@@ -66,6 +68,11 @@ app.include_router(admin_auth.router, prefix="/api")
 app.include_router(admin_users.router, prefix="/api")
 app.include_router(admin_practices.router, prefix="/api")
 app.include_router(admin_history.router, prefix="/api")
+
+# Static files: TTS audio
+audio_dir = Path(__file__).parent.parent / "audio"
+audio_dir.mkdir(exist_ok=True)
+app.mount("/api/audio", StaticFiles(directory=str(audio_dir)), name="audio")
 
 
 @app.get("/api/health")

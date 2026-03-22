@@ -20,7 +20,7 @@ async def list_practices(
     """List practices for mini program users."""
     practices, total = await get_practices(db, category=category, difficulty=difficulty)
     return PracticeListResponse(
-        items=[Practice(id=p.id, text=p.text, category=p.category, difficulty=p.difficulty, hint=p.hint) for p in practices],
+        items=[Practice(id=p.id, text=p.text, category=p.category, difficulty=p.difficulty, hint=p.hint, audio_url=p.audio_url) for p in practices],
         total=total,
     )
 
@@ -36,4 +36,4 @@ async def get_practice(
     if not practice:
         from fastapi import HTTPException, status
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Practice not found")
-    return Practice(id=practice.id, text=practice.text, category=practice.category, difficulty=practice.difficulty, hint=practice.hint)
+    return Practice(id=practice.id, text=practice.text, category=practice.category, difficulty=practice.difficulty, hint=practice.hint, audio_url=practice.audio_url)

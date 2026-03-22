@@ -83,6 +83,11 @@ export function useApi() {
     await api.delete(`/admin/practices/${id}`)
   }
 
+  async function regenerateAudio(id: string): Promise<Practice> {
+    const response = await api.post<Practice>(`/admin/practices/${id}/regenerate-audio`)
+    return response.data
+  }
+
   // ─── Admin History ───
   async function getHistory(
     page = 1,
@@ -104,6 +109,7 @@ export function useApi() {
     createPractice,
     updatePractice,
     deletePractice,
+    regenerateAudio,
     getHistory,
   }
 }
